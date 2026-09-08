@@ -27,7 +27,7 @@ debug: install
 
 clean:
 	rm -rf __pycache__/
-	rm -rf Utils/__pycache__/
+	rm -rf utils/__pycache__/
 	rm -rf .mypy_cache/
 	rm -rf .pytest_cache/
 

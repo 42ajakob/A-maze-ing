@@ -1,3 +1,3 @@
-def TUI(OutFile: str) -> None:
+def tui(OutFile: str) -> None:
     """DocStrings"""
     return

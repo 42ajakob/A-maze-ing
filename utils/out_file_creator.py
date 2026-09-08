@@ -1,3 +1,3 @@
-def OutFileCreator(Maze: int) -> str:
+def out_file_creator(maze: int) -> str:
     """DocStrings"""
     return "OutFile.txt"

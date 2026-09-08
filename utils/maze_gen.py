@@ -2,9 +2,9 @@ class MazeGenerator:
     """DocStrings"""
 
 
-def MazeGen(ParsedData: int) -> int:
+def maze_gen(ParsedData: int) -> int:
     """DocStrings"""
-    Gen = MazeGenerator()
-    if Gen:
+    gen = MazeGenerator()
+    if gen:
         return 0
     return 0
