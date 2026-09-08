@@ -1,14 +1,14 @@
-from Utils import Validator, Parser, MazeGen, OutFileCreator, TUI
+from utils import validator, parser, maze_gen, out_file_creator, tui
 
 
 def main() -> int:
     """DocStrings"""
     try:
-        Validator()
-        ParsedData = Parser()
-        Maze = MazeGen(ParsedData)
-        OutFile = OutFileCreator(Maze)
-        TUI(OutFile)
+        validator()
+        parsed_data = parser()
+        maze = maze_gen(parsed_data)
+        out_file = out_file_creator(maze)
+        tui(out_file)
     except Exception as e:
         print(f"Error: {e}")
         return 2

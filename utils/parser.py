@@ -1,7 +1,7 @@
 from sys import argv
 
 
-def Parser() -> int:
+def parser() -> int:
     """DocStrings"""
     with open(argv[1]) as file:
         print(f"{file.read()}")
