@@ -1,15 +1,15 @@
 import random
 from collections import deque
 
-NORTH = 0b0001
-EAST = 0b0010
-SOUTH = 0b0100
-WEST = 0b1000
+N = 0b0001
+E = 0b0010
+S = 0b0100
+W = 0b1000
 
-#NORTH = 1
-#EAST = 2
-#SOUTH = 4
-#WEST = 8
+#N= 1
+#E = 2
+#S = 4
+#W = 8
 
 class Cell:
     """Single cell in the maze"""
@@ -82,13 +82,13 @@ class MazeGenerator:
 
             """In which direction lays the neighbour?"""
             if nx == x + 1:
-                direction = EAST
+                direction = E
             elif nx == x - 1:
-                direction = WEST
+                direction = W
             elif ny == y + 1:
-                direction = SOUTH
+                direction = S
             else:
-                direction = NORTH
+                direction = N
 
             """Check if the wall is open"""
             if not (cell.walls & direction):
@@ -116,20 +116,20 @@ class MazeGenerator:
         cell2 = self.maze[y2][x2]
 
         if x2 == x1 + 1:
-            cell1.walls &= ~EAST
-            cell2.walls &= ~WEST
+            cell1.walls &= ~E
+            cell2.walls &= ~W
 
         elif x2 == x1 - 1:
-            cell1.walls &= ~WEST
-            cell2.walls &= ~EAST
+            cell1.walls &= ~W
+            cell2.walls &= ~E
 
         elif y2 == y1 + 1:
-            cell1.walls &= ~SOUTH
-            cell2.walls &= ~NORTH
+            cell1.walls &= ~S
+            cell2.walls &= ~N
 
         elif y2 == y1 - 1:
-            cell1.walls &= ~NORTH
-            cell2.walls &= ~SOUTH
+            cell1.walls &= ~N
+            cell2.walls &= ~S
 
         else:
             raise ValueError("Cells are not neighbouring cells")
@@ -156,19 +156,20 @@ class MazeGenerator:
             """Pick one randomly and remove the wall"""
             if unvisited:
                 next_cell = self.random.choice(unvisited)
-
                 self.remove_wall(current, next_cell)
-
                 visited.add(next_cell)
                 stack.append(next_cell)
 
             else:
                 stack.pop()
+                
+        if not self.perfect:
+            self.add_loops()
 
     def validate_connectivity(self) -> bool:
         """Can every cell be reached from the first cell?"""
         visited: set[tuple[int, int]] = set()
-        stack: list[tuple[int, int]] = [(0, 0)]
+        stack: list[tuple[int, int]] = [self.entry]
 
         while stack:
             current = stack.pop()
@@ -196,8 +197,8 @@ class MazeGenerator:
                 if x < self.width - 1:
                     east_cell = self.maze[y][x + 1]
 
-                    east_wall = bool(cell.walls & EAST)
-                    west_wall = bool(east_cell.walls & WEST)
+                    east_wall = bool(cell.walls & E)
+                    west_wall = bool(east_cell.walls & W)
 
                     if east_wall != west_wall:
                         return False
@@ -206,8 +207,8 @@ class MazeGenerator:
                 if y < self.height - 1:
                     south_cell = self.maze[y + 1][x]
 
-                    south_wall = bool(cell.walls & SOUTH)
-                    north_wall = bool(south_cell.walls & NORTH)
+                    south_wall = bool(cell.walls & S)
+                    north_wall = bool(south_cell.walls & N)
 
                     if south_wall != north_wall:
                         return False
@@ -217,17 +218,17 @@ class MazeGenerator:
     def validate_borders(self) -> bool:
         """Are the outer borders of the maze closed?"""
         for x in range(self.width):
-            if self.maze[0][x].walls & NORTH == 0:
+            if self.maze[0][x].walls & N == 0:
                 return False
 
-            if self.maze[self.height - 1][x].walls & SOUTH == 0:
+            if self.maze[self.height - 1][x].walls & S == 0:
                 return False
 
         for y in range(self.height):
-            if self.maze[y][0].walls & WEST == 0:
+            if self.maze[y][0].walls & W == 0:
                 return False
 
-            if self.maze[y][self.width - 1].walls & EAST == 0:
+            if self.maze[y][self.width - 1].walls & E == 0:
                 return False
 
         return True
@@ -246,11 +247,11 @@ class MazeGenerator:
                 cell = self.maze[y][x]
 
                 if x < self.width - 1:
-                    if not (cell.walls & EAST):
+                    if not (cell.walls & E):
                         connections += 1
 
                 if y < self.height - 1:
-                    if not (cell.walls & SOUTH):
+                    if not (cell.walls & S):
                         connections += 1
 
         return connections
@@ -328,35 +329,47 @@ class MazeGenerator:
             dy = next_cell[1] - current[1]
 
             if dx == 1 and dy == 0:
-                directions.append("EAST")
+                directions.append("E")
             elif dx == -1 and dy == 0:
-                directions.append("WEST")
+                directions.append("W")
             elif dx == 0 and dy == 1:
-                directions.append("SOUTH")
+                directions.append("S")
             elif dx == 0 and dy == -1:
-                directions.append("NORTH")
+                directions.append("N")
 
         return "".join(directions)
+    
+    def find_closed_walls(self) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+        """Return closed walls between neighbouring cells"""
+        closed_walls: list[tuple[tuple[int, int], tuple[int, int]]] = []
+        
+        for y in range(self.height):
+            for x in range(self.width):
+                cell = self.maze[y][x]
 
-
-def write_maze(
-    filename: str,
-    generator: MazeGenerator,
-) -> None:
-    """Write the generated maze to a file."""
-
-    path = generator.solve()
-    directions = generator.path_to_directions(path)
-
-    with open(filename, "w") as output_file:
-        for row in generator.to_hex():
-            output_file.write(row + "\n")
-
-        output_file.write("\n")
-        output_file.write(f"{generator.entry[0]},{generator.entry[1]}\n")
-        output_file.write(f"{generator.exit[0]},{generator.exit[1]}\n")
-        output_file.write(directions + "\n")
-
+				#cell to the East: 
+                if x < self.width - 1 and cell.walls & E:
+                    closed_walls.append(((x, y), (x + 1, y)))
+                    
+                #cell to the South:    
+                if y < self.height - 1 and cell.walls & S:
+                    closed_walls.append(((x, y), (x, y + 1)))
+                    
+        return closed_walls
+    
+    def add_loops(self) -> None:
+        "Open additional walls to creaete loops for not perfect maze"
+        closed_walls = self.find_closed_walls()
+        
+        if not closed_walls:
+            return
+        
+        number_of_walls = max(1, len(closed_walls) // 10)
+        
+        for _ in range(number_of_walls):
+            wall = self.random.choice(closed_walls)
+            self.remove_wall(wall[0], wall[1])
+            closed_walls.remove(wall)
 
 """
 TESTING FOLLOWS:
@@ -489,7 +502,7 @@ if __name__ == "__main__":
     42,
 )
 
-generator.maze[0][0].walls &= ~EAST
+generator.maze[0][0].walls &= ~E
 OPTIONAL for true: generator.remove_wall((0, 0), (1, 0))
 
 print("Walls:", generator.validate_walls())
@@ -505,7 +518,7 @@ if __name__ == "__main__":
     42,
 )
 
-generator.maze[0][0].walls &= ~NORTH
+generator.maze[0][0].walls &= ~N
 
 print("Borders:", generator.validate_borders())
 
@@ -584,7 +597,7 @@ if __name__ == "__main__":
 
     print("Path:", path)
     print("Path length:", len(path))
-"""
+
 
 #test hexadecimal conversion
 if __name__ == "__main__":
@@ -603,3 +616,4 @@ if __name__ == "__main__":
 
     for row in rows:
         print(row)
+"""
