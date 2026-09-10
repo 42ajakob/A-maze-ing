@@ -43,6 +43,70 @@ class MazeGenerator:
             [Cell() for _ in range(width)]
             for _ in range(height)
         ]
+        
+    def get_42_pattern(self) -> set[tuple[int, int]]:
+        """Return the centered cells used to draw the 42 pattern."""
+        pattern = {
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (1, 2),
+            (2, 2),
+            (1, 3),
+            (1, 4),
+        
+            (4, 0),
+            (5, 0),
+            (6, 0),
+            (6, 1),
+            (4, 2),
+            (5, 2),
+            (6, 2),
+            (6, 3),
+            (4, 4),
+            (5, 4),
+            (6, 4),        
+    	}
+        
+        if self.width < 7 or self.height < 5:
+            return set()
+        
+        pattern_width = 7
+        pattern_height = 5
+        
+        offset_x = (self.width - pattern_width) // 2
+        offset_y = (self.height - pattern_height) // 2
+        
+        return {
+        	(x + offset_x, y + offset_y)
+        	for x, y in pattern
+        }    
+     
+    def is_42_cell(self, position: tuple[int, int]) -> bool:
+        """Return if a cell belongs to the 42 pattern"""
+        return position in self.get_42_pattern()
+    
+    def is_maze_cell(self, position: tuple[int, int]) -> bool:
+        """Return whether a cell is part of the actual maze."""
+        return position not in self.get_42_pattern()
+    
+    def count_maze_cells(self) -> int:
+        """Count cells that belong to the maze"""
+        count = 0
+        
+        for y in range(self.height):
+            for x in range(self.width):
+                if self.is_maze_cell((x, y)):
+                    count += 1
+                    
+        return count     
+    
+    def validate_entry_exit(self) -> bool:
+        """Check that entry and exit are valid maze cells."""
+        return (
+            self.is_maze_cell(self.entry)
+            and self.is_maze_cell(self.exit)
+        )       
 
     def get_neighbours(
     self,
@@ -136,6 +200,9 @@ class MazeGenerator:
     
     def generate(self) -> None:
         """Generate a random maze"""
+        if not self.validate_entry_exit():
+            raise ValueError("Entry and exit must not be part of the 42 pattern!")
+        
         visited: set[tuple[int, int]] = set()
         stack: list[tuple[int, int]] = []
 
@@ -146,14 +213,14 @@ class MazeGenerator:
         while stack:
             current = stack[-1]
             
-            """Find the unvisited neighbours"""
+            #Find the unvisited neighbours
             neighbours = self.get_neighbours(current)
             unvisited = [
                 neighbour
                 for neighbour in neighbours
-                if neighbour not in visited
+                if neighbour not in visited and self.is_maze_cell(neighbour)
             ]
-            """Pick one randomly and remove the wall"""
+            #Pick one randomly and remove the wall
             if unvisited:
                 next_cell = self.random.choice(unvisited)
                 self.remove_wall(current, next_cell)
@@ -182,9 +249,8 @@ class MazeGenerator:
             for neighbour in self.get_open_neighbours(current):
                 if neighbour not in visited:
                     stack.append(neighbour)
-
-        total_cells = self.width * self.height
-
+                    
+        total_cells = self.count_maze_cells()
         return len(visited) == total_cells
 
     def validate_walls(self) -> bool:
@@ -261,7 +327,7 @@ class MazeGenerator:
         return (
             self.validate_connectivity()
             and self.count_open_connections()
-            == self.width * self.height - 1
+            == self.count_maze_cells() - 1
         )
 
     def solve(self) -> list[tuple[int, int]]:
@@ -348,12 +414,22 @@ class MazeGenerator:
                 cell = self.maze[y][x]
 
 				#cell to the East: 
-                if x < self.width - 1 and cell.walls & E:
+                if (
+                    x < self.width - 1
+                    and self.is_maze_cell((x, y))
+                    and self.is_maze_cell((x + 1, y))
+                    and cell.walls & E
+                ):
                     closed_walls.append(((x, y), (x + 1, y)))
                     
                 #cell to the South:    
-                if y < self.height - 1 and cell.walls & S:
-                    closed_walls.append(((x, y), (x, y + 1)))
+                if (
+                    y < self.height - 1
+                    and self.is_maze_cell((x, y))
+                    and self.is_maze_cell((x, y + 1))
+                    and cell.walls & S
+                ):
+                    closed_walls.append(((x, y), (x, y + 1)))	
                     
         return closed_walls
     
