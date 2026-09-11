@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 
-from utils.maze_gen import MazeGenerator
+from mazegen import MazeGenerator
 from utils.out_file_creator import write_maze
 
 
@@ -108,10 +108,6 @@ def test_perfect_maze() -> None:
     generator.generate()
 
     assert generator.validate_perfect()
-
-    print("pattern:", generator.get_42_pattern())
-    print("connected:", generator.validate_connectivity())
-    print("connections:", generator.count_open_connections())
 
 
 def test_closed_walls() -> None:
@@ -307,6 +303,21 @@ def test_generation_rejects_42_entry() -> None:
         generator.generate()
 
 
+def test_generation_rejects_42_exit() -> None:
+    """Test that generation rejects an exit inside the 42 pattern."""
+    generator = MazeGenerator(
+        width=10,
+        height=10,
+        entry=(0, 0),
+        exit=(2, 2),
+        perfect=True,
+        seed=42,
+    )
+
+    with pytest.raises(ValueError):
+        generator.generate()
+
+
 def test_same_seed_produces_same_maze() -> None:
     """Test that the same seed produces the same maze."""
     generator1 = MazeGenerator(
@@ -402,3 +413,79 @@ def test_42_size_is_too_small() -> None:
     )
 
     assert not generator.validate_42_size()
+
+
+def test_corridor_width_validation() -> None:
+    """Reject a completely open 3x3 area."""
+    generator = MazeGenerator(
+        width=5,
+        height=5,
+        entry=(0, 0),
+        exit=(4, 4),
+        perfect=False,
+    )
+
+    for y in range(3):
+        for x in range(3):
+            if x < 2:
+                generator.remove_wall((x, y), (x + 1, y))
+            if y < 2:
+                generator.remove_wall((x, y), (x, y + 1))
+
+    assert not generator.validate_corridor_width()
+
+
+def test_two_by_three_corridor_is_allowed() -> None:
+    """Allow an open area that is only two cells wide."""
+    generator = MazeGenerator(
+        width=5,
+        height=5,
+        entry=(0, 0),
+        exit=(4, 4),
+        perfect=False,
+    )
+
+    for y in range(3):
+        generator.remove_wall((0, y), (1, y))
+
+        if y < 2:
+            generator.remove_wall((0, y), (0, y + 1))
+            generator.remove_wall((1, y), (1, y + 1))
+
+    assert generator.validate_corridor_width()
+
+
+def test_open_area_three_by_two_is_valid() -> None:
+    """A completely open area two cells wide is allowed."""
+    generator = MazeGenerator(
+        width=5,
+        height=5,
+        entry=(0, 0),
+        exit=(4, 4),
+        perfect=False,
+    )
+
+    for x in range(3):
+        generator.remove_wall((x, 0), (x, 1))
+
+        if x < 2:
+            generator.remove_wall((x, 0), (x + 1, 0))
+            generator.remove_wall((x, 1), (x + 1, 1))
+
+    assert generator.validate_corridor_width()
+
+
+def test_generated_maze_has_valid_corridor_width() -> None:
+    """Generated mazes must not contain 3x3 open areas."""
+    generator = MazeGenerator(
+        width=20,
+        height=15,
+        entry=(0, 0),
+        exit=(19, 14),
+        perfect=False,
+        seed=42,
+    )
+
+    generator.generate()
+
+    assert generator.validate_corridor_width()

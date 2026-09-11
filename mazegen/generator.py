@@ -198,6 +198,43 @@ class MazeGenerator:
         else:
             raise ValueError("Cells are not neighbouring cells")
 
+    def restore_wall(
+        self,
+        first: tuple[int, int],
+        second: tuple[int, int],
+    ) -> None:
+        """Close the wall between two neighbouring cells."""
+        x1, y1 = first
+        x2, y2 = second
+
+        if not (0 <= x1 < self.width and 0 <= y1 < self.height):
+            raise ValueError("First cell is outside of the maze")
+
+        if not (0 <= x2 < self.width and 0 <= y2 < self.height):
+            raise ValueError("Second cell is outside of the maze")
+
+        cell1 = self.maze[y1][x1]
+        cell2 = self.maze[y2][x2]
+
+        if x2 == x1 + 1:
+            cell1.walls |= E
+            cell2.walls |= W
+
+        elif x2 == x1 - 1:
+            cell1.walls |= W
+            cell2.walls |= E
+
+        elif y2 == y1 + 1:
+            cell1.walls |= S
+            cell2.walls |= N
+
+        elif y2 == y1 - 1:
+            cell1.walls |= N
+            cell2.walls |= S
+
+        else:
+            raise ValueError("Cells are not neighbouring cells")
+
     def generate(self) -> None:
         """Generate a random maze."""
 
@@ -238,6 +275,23 @@ class MazeGenerator:
         if not self.perfect:
             self.add_loops()
 
+        if not self.validate_corridor_width():
+            raise ValueError(
+                "Generated maze contains an area wider than two cells."
+            )
+
+        if not self.validate_connectivity():
+            raise ValueError("Generated maze is not fully connected.")
+
+        if not self.validate_walls():
+            raise ValueError("Generated maze contains inconsistent walls.")
+
+        if not self.validate_borders():
+            raise ValueError("Generated maze has an open outer border.")
+
+        if self.perfect and not self.validate_perfect():
+            raise ValueError("Generated maze is not perfect.")
+
     def find_closed_walls(
         self,
     ) -> list[tuple[tuple[int, int], tuple[int, int]]]:
@@ -269,7 +323,7 @@ class MazeGenerator:
         return closed_walls
 
     def add_loops(self) -> None:
-        "Open additional walls to create loops for an imperfect maze."
+        """Open additional walls to create loops for an imperfect maze."""
         closed_walls = self.find_closed_walls()
 
         if not closed_walls:
@@ -277,10 +331,21 @@ class MazeGenerator:
 
         number_of_walls = max(1, len(closed_walls) // 10)
 
-        for _ in range(number_of_walls):
-            wall = self.random.choice(closed_walls)
+        self.random.shuffle(closed_walls)
+
+        added = 0
+
+        for wall in closed_walls:
+            if added >= number_of_walls:
+                break
+
             self.remove_wall(wall[0], wall[1])
-            closed_walls.remove(wall)
+
+            if self.validate_corridor_width():
+                added += 1
+            else:
+                # if wall created a 3x3 open area, re-close it
+                self.restore_wall(wall[0], wall[1])
 
     def validate_connectivity(self) -> bool:
         """Check if every cell can be reached from the first cell."""
@@ -351,6 +416,29 @@ class MazeGenerator:
 
             if self.maze[y][self.width - 1].walls & E == 0:
                 return False
+
+        return True
+
+    def is_open_3x3(self, x: int, y: int) -> bool:
+        """Check whether a 3x3 area is completely open."""
+        for row in range(y, y + 3):
+            for col in range(x, x + 2):
+                if self.maze[row][col].walls & E:
+                    return False
+
+        for row in range(y, y + 2):
+            for col in range(x, x + 3):
+                if self.maze[row][col].walls & S:
+                    return False
+
+        return True
+
+    def validate_corridor_width(self) -> bool:
+        """Check that no open area is wider than two cells."""
+        for y in range(self.height - 2):
+            for x in range(self.width - 2):
+                if self.is_open_3x3(x, y):
+                    return False
 
         return True
 

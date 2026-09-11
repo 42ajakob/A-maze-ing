@@ -28,8 +28,13 @@ debug: install
 clean:
 	rm -rf __pycache__/
 	rm -rf utils/__pycache__/
+	rm -rf mazegen/__pycache__/
+	rm -rf tests/__pycache__/
 	rm -rf .mypy_cache/
 	rm -rf .pytest_cache/
+	rm -rf dist/
+	rm -rf build/
+	rm -rf *.egg-info/
 
 lint: install
 	@$(VENV_PYTHON) -m flake8 --exclude=$(VENV_DIR) .

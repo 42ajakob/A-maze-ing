@@ -1,4 +1,5 @@
-from utils import validator, parser, maze_gen, out_file_creator, tui
+from utils import validator, parser, out_file_creator, tui
+from mazegen import MazeGenerator
 
 
 def main() -> int:
@@ -6,7 +7,7 @@ def main() -> int:
     try:
         validator()
         parsed_data = parser()
-        maze = maze_gen(parsed_data)
+        maze = MazeGenerator(parsed_data)
         out_file = out_file_creator(maze)
         tui(out_file)
     except Exception as e:
