@@ -105,6 +105,10 @@ class MazeGenerator:
             and self.is_maze_cell(self.exit)
         )
 
+    def validate_42_size(self) -> bool:
+        """Check if the maze is large enough for the 42 pattern."""
+        return self.width >= 7 and self.height >= 5
+
     def get_neighbours(
         self,
         position: tuple[int, int],
@@ -196,10 +200,11 @@ class MazeGenerator:
 
     def generate(self) -> None:
         """Generate a random maze."""
+
         if not self.validate_entry_exit():
             raise ValueError(
-                "Entry and exit must not be part of the 42 pattern!"
-            )
+                "Entry and exit must not be part of the 42 pattern."
+                )
 
         visited: set[tuple[int, int]] = set()
         stack: list[tuple[int, int]] = []
@@ -209,6 +214,7 @@ class MazeGenerator:
         stack.append(current)
 
         while stack:
+            # DFS - using stack, last cell in, first cell out
             current = stack[-1]
 
             # Find the unvisited neighbours
@@ -226,6 +232,7 @@ class MazeGenerator:
                 stack.append(next_cell)
 
             else:
+                # no unvisited neighbour - backtracking by popping stack
                 stack.pop()
 
         if not self.perfect:
@@ -262,7 +269,7 @@ class MazeGenerator:
         return closed_walls
 
     def add_loops(self) -> None:
-        "Open additional walls to create loops for the imperfect maze."
+        "Open additional walls to create loops for an imperfect maze."
         closed_walls = self.find_closed_walls()
 
         if not closed_walls:
@@ -289,11 +296,17 @@ class MazeGenerator:
             visited.add(current)
 
             for neighbour in self.get_open_neighbours(current):
-                if neighbour not in visited:
+                if neighbour not in visited and self.is_maze_cell(neighbour):
                     stack.append(neighbour)
 
-        total_cells = self.count_maze_cells()
-        return len(visited) == total_cells
+        maze_cells = {
+            (x, y)
+            for y in range(self.height)
+            for x in range(self.width)
+            if self.is_maze_cell((x, y))
+        }
+
+        return visited == maze_cells
 
     def validate_walls(self) -> bool:
         """Check if neighbouring cells have matching walls."""
@@ -301,7 +314,7 @@ class MazeGenerator:
             for x in range(self.width):
                 cell = self.maze[y][x]
 
-                """Check East neighbour"""
+                # Check East neighbour
                 if x < self.width - 1:
                     east_cell = self.maze[y][x + 1]
 
@@ -311,7 +324,7 @@ class MazeGenerator:
                     if east_wall != west_wall:
                         return False
 
-                """Check South neighbour"""
+                # Check South neighbour
                 if y < self.height - 1:
                     south_cell = self.maze[y + 1][x]
 
@@ -324,7 +337,7 @@ class MazeGenerator:
         return True
 
     def validate_borders(self) -> bool:
-        """Check if the outer borders of the maze closed."""
+        """Check if the outer borders of the maze are closed."""
         for x in range(self.width):
             if self.maze[0][x].walls & N == 0:
                 return False
@@ -344,7 +357,7 @@ class MazeGenerator:
     # validate_connectivity() - Can I reach every cell?
     # validate_walls() - Do neighboring cells agree?
     # validate_borders() - Is the maze contained within its boundaries?
-    # NOW PERFECT OPTION, FOUND OUT BZY COUNTING, CELLS-1"""
+    # NOW PERFECT OPTION, FOUND OUT BY COUNTING, CELLS-1
 
     def count_open_connections(self) -> int:
         """Count the connections between maze cells."""
@@ -354,13 +367,21 @@ class MazeGenerator:
             for x in range(self.width):
                 cell = self.maze[y][x]
 
-                if x < self.width - 1:
-                    if not (cell.walls & E):
-                        connections += 1
+                if (
+                    x < self.width - 1
+                    and self.is_maze_cell((x, y))
+                    and self.is_maze_cell((x + 1, y))
+                    and not (cell.walls & E)
+                ):
+                    connections += 1
 
-                if y < self.height - 1:
-                    if not (cell.walls & S):
-                        connections += 1
+                if (
+                    y < self.height - 1
+                    and self.is_maze_cell((x, y))
+                    and self.is_maze_cell((x, y + 1))
+                    and not (cell.walls & S)
+                ):
+                    connections += 1
 
         return connections
 
@@ -391,7 +412,10 @@ class MazeGenerator:
 
             for neighbour in self.get_open_neighbours(current):
                 # avoids walking around the same cells over and over again:
-                if neighbour not in visited:
+                if (
+                    self.is_maze_cell(neighbour)
+                    and neighbour not in visited
+                ):
                     visited.add(neighbour)
                     # records how I got to this spot:
                     previous[neighbour] = current
@@ -401,11 +425,11 @@ class MazeGenerator:
             raise ValueError("No path exists between entry and exit.")
 
         path: list[tuple[int, int]] = []
-        current: tuple[int, int] | None = self.exit
+        position: tuple[int, int] | None = self.exit
 
-        while current is not None:
-            path.append(current)
-            current = previous[current]
+        while position is not None:
+            path.append(position)
+            position = previous[position]
 
         path.reverse()
 

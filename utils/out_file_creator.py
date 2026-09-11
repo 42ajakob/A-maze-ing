@@ -10,7 +10,7 @@ def write_maze(
     path = generator.solve()
     directions = generator.path_to_directions(path)
 
-    with open(filename, "w") as output_file:
+    with open(filename, "w", encoding="utf-8") as output_file:
         for row in generator.to_hex():
             output_file.write(row + "\n")
 

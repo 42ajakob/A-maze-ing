@@ -1,10 +1,11 @@
 import pytest
+from pathlib import Path
 
 from utils.maze_gen import MazeGenerator
 from utils.out_file_creator import write_maze
 
 
-def test_write_maze(tmp_path):
+def test_write_maze(tmp_path: Path) -> None:
     """Test that a maze is written in required format."""
     generator = MazeGenerator(
         width=2,
@@ -32,7 +33,7 @@ def test_write_maze(tmp_path):
     assert lines[5] == generator.path_to_directions(generator.solve())
 
 
-def test_path_to_directions():
+def test_path_to_directions() -> None:
     """Test converting a coordinate path into directions."""
     generator = MazeGenerator(
         width=3,
@@ -56,7 +57,7 @@ def test_path_to_directions():
     assert directions == "ESES"
 
 
-def test_solve():
+def test_solve() -> None:
     """Test that the solver finds a valid path."""
     generator = MazeGenerator(
         width=3,
@@ -75,7 +76,7 @@ def test_solve():
     assert path[-1] == (2, 2)
 
 
-def test_connection_open_walls():
+def test_connection_open_walls() -> None:
     """Test that every pair of cells is connected by an open wall."""
     generator = MazeGenerator(
         width=3,
@@ -93,7 +94,7 @@ def test_connection_open_walls():
         assert next_cell in generator.get_open_neighbours(current)
 
 
-def test_perfect_maze():
+def test_perfect_maze() -> None:
     """Test that a perfect maze has one path only."""
     generator = MazeGenerator(
         width=10,
@@ -113,7 +114,7 @@ def test_perfect_maze():
     print("connections:", generator.count_open_connections())
 
 
-def test_closed_walls():
+def test_closed_walls() -> None:
     """Test that closed walls within the maze can be found."""
     generator = MazeGenerator(
         width=2,
@@ -129,7 +130,7 @@ def test_closed_walls():
     assert len(closed_walls) == 4
 
 
-def test_not_perfect_maze():
+def test_not_perfect_maze() -> None:
     """Test that a not perfect maze can have additional connections."""
     generator = MazeGenerator(
         width=10,
@@ -149,7 +150,7 @@ def test_not_perfect_maze():
     )
 
 
-def test_42_pattern():
+def test_42_pattern() -> None:
     """Test that the 42 pattern contains fully closed cells."""
     generator = MazeGenerator(
         width=10,
@@ -168,7 +169,7 @@ def test_42_pattern():
         assert generator.maze[y][x].walls == 0b1111
 
 
-def test_42_cell():
+def test_42_cell() -> None:
     """Test that identifies cells that are part of the 42 pattern."""
     generator = MazeGenerator(
         width=10,
@@ -184,7 +185,7 @@ def test_42_cell():
     assert not generator.is_42_cell((4, 4))
 
 
-def test_42_pattern_is_centered():
+def test_42_pattern_is_centered() -> None:
     """Test that the 42 pattern is centered."""
     generator = MazeGenerator(
         width=20,
@@ -202,7 +203,7 @@ def test_42_pattern_is_centered():
     assert len(pattern) == 18
 
 
-def test_is_maze_cell():
+def test_is_maze_cell() -> None:
     """Test identifying normal maze cells."""
     generator = MazeGenerator(
         width=10,
@@ -217,7 +218,7 @@ def test_is_maze_cell():
     assert generator.is_maze_cell((4, 4))
 
 
-def test_count_maze_cell():
+def test_count_maze_cell() -> None:
     """Test counting cells that belong to maze."""
     generator = MazeGenerator(
         width=10,
@@ -231,7 +232,7 @@ def test_count_maze_cell():
     assert generator.count_maze_cells() == 82
 
 
-def test_42_cells_are_closed():
+def test_42_cells_are_closed() -> None:
     """Test that all 42 cells have all walls closed."""
     generator = MazeGenerator(
         width=20,
@@ -249,7 +250,7 @@ def test_42_cells_are_closed():
         assert generator.maze[y][x].walls == 0b1111
 
 
-def test_42_pattern_not_used_when_maze_is_too_small():
+def test_42_pattern_not_used_when_maze_is_too_small() -> None:
     """Test that small mazes do not reserve 42 cells."""
     generator = MazeGenerator(
         width=6,
@@ -263,7 +264,7 @@ def test_42_pattern_not_used_when_maze_is_too_small():
     assert generator.get_42_pattern() == set()
 
 
-def test_entry_exit_not_42():
+def test_entry_exit_not_42() -> None:
     """Test that entry and exit cannot be 42 cells."""
     generator = MazeGenerator(
         width=10,
@@ -277,7 +278,7 @@ def test_entry_exit_not_42():
     assert not generator.validate_entry_exit()
 
 
-def test_entry_exit_are_valid():
+def test_entry_exit_are_valid() -> None:
     """Test valid entry and exit cells."""
     generator = MazeGenerator(
         width=10,
@@ -291,7 +292,7 @@ def test_entry_exit_are_valid():
     assert generator.validate_entry_exit()
 
 
-def test_generation_rejects_42_entry():
+def test_generation_rejects_42_entry() -> None:
     """Test that generation rejects an entry inside the 42 pattern."""
     generator = MazeGenerator(
         width=10,
@@ -306,7 +307,7 @@ def test_generation_rejects_42_entry():
         generator.generate()
 
 
-def test_same_seed_produces_same_maze():
+def test_same_seed_produces_same_maze() -> None:
     """Test that the same seed produces the same maze."""
     generator1 = MazeGenerator(
         width=20,
@@ -332,7 +333,7 @@ def test_same_seed_produces_same_maze():
     assert generator1.to_hex() == generator2.to_hex()
 
 
-def test_hex_dimensions():
+def test_hex_dimensions() -> None:
     """Test that hex output matches maze dimensions."""
     generator = MazeGenerator(
         width=20,
@@ -350,7 +351,7 @@ def test_hex_dimensions():
     assert all(len(row) == 20 for row in rows)
 
 
-def test_write_maze_contains_solution(tmp_path):
+def test_write_maze_contains_solution(tmp_path: Path) -> None:
     """Test that the maze file contains the shortest path."""
     generator = MazeGenerator(
         width=3,
@@ -373,3 +374,31 @@ def test_write_maze_contains_solution(tmp_path):
     assert lines[4] == "0,0"
     assert lines[5] == "2,2"
     assert lines[6] == generator.path_to_directions(generator.solve())
+
+
+def test_42_size_is_valid() -> None:
+    """Test that a large enough maze can display 42."""
+    generator = MazeGenerator(
+        width=20,
+        height=15,
+        entry=(0, 0),
+        exit=(19, 14),
+        perfect=True,
+        seed=42,
+    )
+
+    assert generator.validate_42_size()
+
+
+def test_42_size_is_too_small() -> None:
+    """Test that a small maze cannot display 42."""
+    generator = MazeGenerator(
+        width=6,
+        height=5,
+        entry=(0, 0),
+        exit=(5, 4),
+        perfect=True,
+        seed=42,
+    )
+
+    assert not generator.validate_42_size()
