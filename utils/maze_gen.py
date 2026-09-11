@@ -6,20 +6,17 @@ E = 0b0010
 S = 0b0100
 W = 0b1000
 
-#N= 1
-#E = 2
-#S = 4
-#W = 8
 
 class Cell:
-    """Single cell in the maze"""
+    """Represent a single cell in the maze."""
 
     def __init__(self) -> None:
-        """Initialize a cell with all walls closed"""
+        """Initialize a cell with all walls closed."""
         self.walls: int = 0b1111
 
+
 class MazeGenerator:
-    """Generate a maze"""
+    """Generate a maze."""
 
     def __init__(
         self,
@@ -30,7 +27,7 @@ class MazeGenerator:
         perfect: bool,
         seed: int | None = None,
     ) -> None:
-        """Initialize the maze generator"""
+        """Initialize the maze generator."""
         self.width: int = width
         self.height: int = height
         self.entry: tuple[int, int] = entry
@@ -43,7 +40,7 @@ class MazeGenerator:
             [Cell() for _ in range(width)]
             for _ in range(height)
         ]
-        
+
     def get_42_pattern(self) -> set[tuple[int, int]]:
         """Return the centered cells used to draw the 42 pattern."""
         pattern = {
@@ -54,7 +51,7 @@ class MazeGenerator:
             (2, 2),
             (1, 3),
             (1, 4),
-        
+
             (4, 0),
             (5, 0),
             (6, 0),
@@ -65,54 +62,54 @@ class MazeGenerator:
             (6, 3),
             (4, 4),
             (5, 4),
-            (6, 4),        
-    	}
-        
+            (6, 4),
+        }
+
         if self.width < 7 or self.height < 5:
             return set()
-        
+
         pattern_width = 7
         pattern_height = 5
-        
+
         offset_x = (self.width - pattern_width) // 2
         offset_y = (self.height - pattern_height) // 2
-        
+
         return {
-        	(x + offset_x, y + offset_y)
-        	for x, y in pattern
-        }    
-     
+            (x + offset_x, y + offset_y)
+            for x, y in pattern
+        }
+
     def is_42_cell(self, position: tuple[int, int]) -> bool:
-        """Return if a cell belongs to the 42 pattern"""
+        """Return if a cell belongs to the 42 pattern."""
         return position in self.get_42_pattern()
-    
+
     def is_maze_cell(self, position: tuple[int, int]) -> bool:
-        """Return whether a cell is part of the actual maze."""
+        """Return if a cell is part of the actual maze."""
         return position not in self.get_42_pattern()
-    
+
     def count_maze_cells(self) -> int:
-        """Count cells that belong to the maze"""
+        """Count cells that belong to the maze."""
         count = 0
-        
+
         for y in range(self.height):
             for x in range(self.width):
                 if self.is_maze_cell((x, y)):
                     count += 1
-                    
-        return count     
-    
+
+        return count
+
     def validate_entry_exit(self) -> bool:
         """Check that entry and exit are valid maze cells."""
         return (
             self.is_maze_cell(self.entry)
             and self.is_maze_cell(self.exit)
-        )       
+        )
 
     def get_neighbours(
-    self,
-    position: tuple[int, int],
+        self,
+        position: tuple[int, int],
     ) -> list[tuple[int, int]]:
-        """Return the neighbouring cells. Which cells are connected?"""
+        """Return the neighbouring cells."""
         x, y = position
 
         neighbours = []
@@ -135,7 +132,7 @@ class MazeGenerator:
         self,
         position: tuple[int, int],
     ) -> list[tuple[int, int]]:
-        """Return the neighbouring cells connected by an open wall. Which cells can be walked to?"""
+        """Return the neighbouring cells connected by an open wall."""
         x, y = position
         cell = self.maze[y][x]
 
@@ -144,7 +141,7 @@ class MazeGenerator:
         for neighbour in self.get_neighbours(position):
             nx, ny = neighbour
 
-            """In which direction lays the neighbour?"""
+            # In which direction lays the neighbour?
             if nx == x + 1:
                 direction = E
             elif nx == x - 1:
@@ -154,19 +151,18 @@ class MazeGenerator:
             else:
                 direction = N
 
-            """Check if the wall is open"""
+            # Check if the wall is open
             if not (cell.walls & direction):
                 open_neighbours.append(neighbour)
 
         return open_neighbours
 
-	
     def remove_wall(
-    	self,
-    	first: tuple[int, int],
-    	second: tuple[int, int],
+        self,
+        first: tuple[int, int],
+        second: tuple[int, int],
     ) -> None:
-        """Open the wall between two neighbouring cells"""
+        """Open the wall between two neighbouring cells."""
         x1, y1 = first
         x2, y2 = second
 
@@ -197,12 +193,14 @@ class MazeGenerator:
 
         else:
             raise ValueError("Cells are not neighbouring cells")
-    
+
     def generate(self) -> None:
-        """Generate a random maze"""
+        """Generate a random maze."""
         if not self.validate_entry_exit():
-            raise ValueError("Entry and exit must not be part of the 42 pattern!")
-        
+            raise ValueError(
+                "Entry and exit must not be part of the 42 pattern!"
+            )
+
         visited: set[tuple[int, int]] = set()
         stack: list[tuple[int, int]] = []
 
@@ -212,15 +210,15 @@ class MazeGenerator:
 
         while stack:
             current = stack[-1]
-            
-            #Find the unvisited neighbours
+
+            # Find the unvisited neighbours
             neighbours = self.get_neighbours(current)
             unvisited = [
                 neighbour
                 for neighbour in neighbours
                 if neighbour not in visited and self.is_maze_cell(neighbour)
             ]
-            #Pick one randomly and remove the wall
+            # Pick one randomly and remove the wall
             if unvisited:
                 next_cell = self.random.choice(unvisited)
                 self.remove_wall(current, next_cell)
@@ -229,12 +227,56 @@ class MazeGenerator:
 
             else:
                 stack.pop()
-                
+
         if not self.perfect:
             self.add_loops()
 
+    def find_closed_walls(
+        self,
+    ) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+        """Return closed walls between neighbouring cells."""
+        closed_walls: list[tuple[tuple[int, int], tuple[int, int]]] = []
+
+        for y in range(self.height):
+            for x in range(self.width):
+                cell = self.maze[y][x]
+
+                # cell to the East:
+                if (
+                    x < self.width - 1
+                    and self.is_maze_cell((x, y))
+                    and self.is_maze_cell((x + 1, y))
+                    and cell.walls & E
+                ):
+                    closed_walls.append(((x, y), (x + 1, y)))
+
+                # cell to the South:
+                if (
+                    y < self.height - 1
+                    and self.is_maze_cell((x, y))
+                    and self.is_maze_cell((x, y + 1))
+                    and cell.walls & S
+                ):
+                    closed_walls.append(((x, y), (x, y + 1)))
+
+        return closed_walls
+
+    def add_loops(self) -> None:
+        "Open additional walls to create loops for the imperfect maze."
+        closed_walls = self.find_closed_walls()
+
+        if not closed_walls:
+            return
+
+        number_of_walls = max(1, len(closed_walls) // 10)
+
+        for _ in range(number_of_walls):
+            wall = self.random.choice(closed_walls)
+            self.remove_wall(wall[0], wall[1])
+            closed_walls.remove(wall)
+
     def validate_connectivity(self) -> bool:
-        """Can every cell be reached from the first cell?"""
+        """Check if every cell can be reached from the first cell."""
         visited: set[tuple[int, int]] = set()
         stack: list[tuple[int, int]] = [self.entry]
 
@@ -249,12 +291,12 @@ class MazeGenerator:
             for neighbour in self.get_open_neighbours(current):
                 if neighbour not in visited:
                     stack.append(neighbour)
-                    
+
         total_cells = self.count_maze_cells()
         return len(visited) == total_cells
 
     def validate_walls(self) -> bool:
-        """Do neighbouring cells have matching walls?"""
+        """Check if neighbouring cells have matching walls."""
         for y in range(self.height):
             for x in range(self.width):
                 cell = self.maze[y][x]
@@ -282,7 +324,7 @@ class MazeGenerator:
         return True
 
     def validate_borders(self) -> bool:
-        """Are the outer borders of the maze closed?"""
+        """Check if the outer borders of the maze closed."""
         for x in range(self.width):
             if self.maze[0][x].walls & N == 0:
                 return False
@@ -299,13 +341,13 @@ class MazeGenerator:
 
         return True
 
-    #validate_connectivity() - Can I reach every cell?
-    #validate_walls() - Do neighboring cells agree?
-    #validate_borders() - Is the maze contained within its boundaries?
-    #NOW PERFECT OPTION, FOUND OUT BZY COUNTING, CELLS-1"""
+    # validate_connectivity() - Can I reach every cell?
+    # validate_walls() - Do neighboring cells agree?
+    # validate_borders() - Is the maze contained within its boundaries?
+    # NOW PERFECT OPTION, FOUND OUT BZY COUNTING, CELLS-1"""
 
     def count_open_connections(self) -> int:
-        """Count the connections between maze cells"""
+        """Count the connections between maze cells."""
         connections = 0
 
         for y in range(self.height):
@@ -323,7 +365,7 @@ class MazeGenerator:
         return connections
 
     def validate_perfect(self) -> bool:
-        """Is the maze a perfect maze?"""
+        """Check if the maze is a perfect maze."""
         return (
             self.validate_connectivity()
             and self.count_open_connections()
@@ -331,7 +373,7 @@ class MazeGenerator:
         )
 
     def solve(self) -> list[tuple[int, int]]:
-        """Find shortest path from entry to exit."""
+        """Find the shortest path from entry to exit."""
         queue: deque[tuple[int, int]] = deque()
         visited: set[tuple[int, int]] = set()
         previous: dict[tuple[int, int], tuple[int, int] | None] = {}
@@ -341,17 +383,17 @@ class MazeGenerator:
         previous[self.entry] = None
 
         while queue:
-            #BFS: process cells in the order they were discovered
+            # BFS: process cells in the order they were discovered
             current = queue.popleft()
 
             if current == self.exit:
                 break
 
             for neighbour in self.get_open_neighbours(current):
-                #avoids walking around the same cells over and over again:    
+                # avoids walking around the same cells over and over again:
                 if neighbour not in visited:
                     visited.add(neighbour)
-                    #records how I got to this spot:
+                    # records how I got to this spot:
                     previous[neighbour] = current
                     queue.append(neighbour)
 
@@ -369,25 +411,11 @@ class MazeGenerator:
 
         return path
 
-    def to_hex(self) -> list[str]:
-        """Maze walls are converted to hexadecimal rows"""
-        rows: list[str] = []
-
-        for row in self.maze:
-            line = ""
-
-            for cell in row:
-                line += format(cell.walls, "X")
-
-            rows.append(line)
-
-        return rows
-
     def path_to_directions(
         self,
         path: list[tuple[int, int]],
     ) -> str:
-        """Convert the coordinate path to directions"""
+        """Convert the coordinate path to directions."""
         directions: list[str] = []
 
         for current, next_cell in zip(path, path[1:]):
@@ -404,292 +432,17 @@ class MazeGenerator:
                 directions.append("N")
 
         return "".join(directions)
-    
-    def find_closed_walls(self) -> list[tuple[tuple[int, int], tuple[int, int]]]:
-        """Return closed walls between neighbouring cells"""
-        closed_walls: list[tuple[tuple[int, int], tuple[int, int]]] = []
-        
-        for y in range(self.height):
-            for x in range(self.width):
-                cell = self.maze[y][x]
 
-				#cell to the East: 
-                if (
-                    x < self.width - 1
-                    and self.is_maze_cell((x, y))
-                    and self.is_maze_cell((x + 1, y))
-                    and cell.walls & E
-                ):
-                    closed_walls.append(((x, y), (x + 1, y)))
-                    
-                #cell to the South:    
-                if (
-                    y < self.height - 1
-                    and self.is_maze_cell((x, y))
-                    and self.is_maze_cell((x, y + 1))
-                    and cell.walls & S
-                ):
-                    closed_walls.append(((x, y), (x, y + 1)))	
-                    
-        return closed_walls
-    
-    def add_loops(self) -> None:
-        "Open additional walls to creaete loops for not perfect maze"
-        closed_walls = self.find_closed_walls()
-        
-        if not closed_walls:
-            return
-        
-        number_of_walls = max(1, len(closed_walls) // 10)
-        
-        for _ in range(number_of_walls):
-            wall = self.random.choice(closed_walls)
-            self.remove_wall(wall[0], wall[1])
-            closed_walls.remove(wall)
+    def to_hex(self) -> list[str]:
+        """Maze walls are converted to hexadecimal rows."""
+        rows: list[str] = []
 
-"""
-TESTING FOLLOWS:
+        for row in self.maze:
+            line = ""
 
+            for cell in row:
+                line += format(cell.walls, "X")
 
-if __name__ == "__main__":
-    generator = MazeGenerator(
-        width=3,
-        height=3,
-        entry=(0, 0),
-        exit=(2, 2),
-        perfect=True,
-        seed=42,
-    )
+            rows.append(line)
 
-    print("Maze size:", generator.width, "x", generator.height)
-    print("Entry:", generator.entry)
-    print("Exit:", generator.exit)
-    print("Perfect:", generator.perfect)
-    print("Seed:", generator.seed)
-
-    print("\nWalls:")
-    for row in generator.maze:
-        for cell in row:
-            print(bin(cell.walls), end=" ")
-        print()
-        
-        
-if __name__ == "__main__":
-    generator = MazeGenerator(
-        2,
-        1,
-        (0, 0),
-        (1, 0),
-        True,
-        42,
-    )
-
-    generator.remove_wall((0, 0), (1, 0))
-
-    print(bin(generator.maze[0][0].walls))
-    print(bin(generator.maze[0][1].walls))
-
-    
-if __name__ == "__main__":
-    generator = MazeGenerator(
-        3,
-        3,
-        (0, 0),
-        (2, 2),
-        True,
-        42,
-    )
-
-    print("Center:", generator.get_neighbors((1, 1)))
-    print("Top-left:", generator.get_neighbors((0, 0)))
-    print("Bottom-right:", generator.get_neighbors((2, 2)))
-
-    
-if __name__ == "__main__":
-    generator = MazeGenerator(
-        3,
-        3,
-        (0, 0),
-        (2, 2),
-        True,
-        42,
-    )
-
-    generator.generate()
-
-    for row in generator.maze:
-        for cell in row:
-            print(bin(cell.walls), end=" ")
-        print()
-
-        
-if __name__ == "__main__":
-    generator = MazeGenerator(
-        2,
-        1,
-        (0, 0),
-        (1, 0),
-        True,
-        42,
-    )
-
-    print("Before:", generator.get_open_neighbours((0, 0)))
-
-    generator.remove_wall((0, 0), (1, 0))
-
-    print("After:", generator.get_open_neighbours((0, 0)))
-    
-    
-if __name__ == "__main__":
-    generator = MazeGenerator(
-    3,
-    3,
-    (0, 0),
-    (2, 2),
-    True,
-    42,
-)
-
-print("Connected:", generator.validate_connectivity())
-
-
-if __name__ == "__main__":
-    generator = MazeGenerator(
-    3,
-    3,
-    (0, 0),
-    (2, 2),
-    True,
-    42,
-)
-
-generator.generate()
-
-print("Connected:", generator.validate_connectivity())
-
-
-if __name__ == "__main__":
-    generator = MazeGenerator(
-    3,
-    3,
-    (0, 0),
-    (2, 2),
-    True,
-    42,
-)
-
-generator.maze[0][0].walls &= ~E
-OPTIONAL for true: generator.remove_wall((0, 0), (1, 0))
-
-print("Walls:", generator.validate_walls())
-
-
-if __name__ == "__main__":
-    generator = MazeGenerator(
-    3,
-    3,
-    (0, 0),
-    (2, 2),
-    True,
-    42,
-)
-
-generator.maze[0][0].walls &= ~N
-
-print("Borders:", generator.validate_borders())
-
-
-if __name__ == "__main__":
-    generator = MazeGenerator(
-    3,
-    3,
-    (0, 0),
-    (2, 2),
-    True,
-    42,
-)
-
-generator.generate()
-
-print("Connected:", generator.validate_connectivity())
-print("Walls:", generator.validate_walls())
-print("Borders:", generator.validate_borders())
-print("Connections:", generator.count_open_connections())
-print("Perfect:", generator.validate_perfect())
-
-
-if __name__ == "__main__":
-    generator = MazeGenerator(
-        3,
-        3,
-        (0, 0),
-        (2, 2),
-        True,
-        42,
-    )
-
-    generator.remove_wall((0, 0), (1, 0))
-    generator.remove_wall((1, 0), (1, 1))
-    generator.remove_wall((1, 1), (2, 1))
-    generator.remove_wall((2, 1), (2, 2))
-
-    path = generator.solve()
-
-    print("Path:", path)
-
-    
-#impossible maze:
-if __name__ == "__main__":
-    generator = MazeGenerator(
-    3,
-    3,
-    (0, 0),
-    (2, 2),
-    True,
-    42,
-    )
-
-    path = generator.solve()
-
-    print("Path:", path)
-
-
-if __name__ == "__main__":
-    generator = MazeGenerator(
-    10,
-    10,
-    (0, 0),
-    (9, 9),
-    True,
-    42,
-    )
-
-    generator.generate()
-
-    print("Connected:", generator.validate_connectivity())
-    print("Perfect:", generator.validate_perfect())
-
-    path = generator.solve()
-
-    print("Path:", path)
-    print("Path length:", len(path))
-
-
-#test hexadecimal conversion
-if __name__ == "__main__":
-    generator = MazeGenerator(
-        2,
-        1,
-        (0, 0),
-        (1, 0),
-        True,
-        42,
-    )
-
-    generator.remove_wall((0, 0), (1, 0))
-
-    rows = generator.to_hex()
-
-    for row in rows:
-        print(row)
-"""
+        return rows

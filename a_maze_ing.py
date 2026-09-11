@@ -1,5 +1,6 @@
 from utils import validator, parser, maze_gen, out_file_creator, tui
 
+
 def main() -> int:
     """DocStrings"""
     try:

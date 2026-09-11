@@ -1,5 +1,6 @@
 from utils.maze_gen import MazeGenerator
 
+
 def write_maze(
     filename: str,
     generator: MazeGenerator,

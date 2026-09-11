@@ -1,4 +1,5 @@
 from utils.maze_gen import MazeGenerator
+from utils.out_file_creator import write_maze
 
 generator = MazeGenerator(
         width=20,
@@ -11,5 +12,6 @@ generator = MazeGenerator(
 
 generator.generate()
 
-print(generator.to_hex())
+# print(generator.to_hex())
 
+write_maze("maze.txt.", generator)
