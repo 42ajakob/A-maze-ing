@@ -1,4 +1,8 @@
-from src import parser, MazeGenerator, write_maze, tui
+from src.parser import parser, MazeConfig
+from src.mazegen.generator import MazeGenerator
+from src.output_file import write_maze
+from src.tui import tui
+
 
 def create_maze() -> "MazeConfig":
     """parses config, generates a maze,
@@ -22,6 +26,7 @@ def create_maze() -> "MazeConfig":
         print(f"Error: {e}")
         exit(1)
     return config
+
 
 def main() -> int:
     """creates a maze and starts tui"""
