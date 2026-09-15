@@ -71,8 +71,14 @@ class MazeGenerator:
         """Initialize the maze generator."""
         self.width: int = width
         self.height: int = height
-        self.entry: tuple[int, int] = entry
-        self.exit: tuple[int, int] = exit
+        # entry/exit of (width, height) refer to the far border cell, same
+        # as (width - 1, height - 1); the maze stays fully walled either way.
+        self.entry: tuple[int, int] = (
+            min(entry[0], width - 1), min(entry[1], height - 1)
+        )
+        self.exit: tuple[int, int] = (
+            min(exit[0], width - 1), min(exit[1], height - 1)
+        )
         self.perfect: bool = perfect
         self.seed: int | None = seed
         self.random = random.Random(seed)

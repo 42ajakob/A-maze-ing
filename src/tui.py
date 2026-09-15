@@ -55,7 +55,7 @@ class MazeApp:
         return lines, tags
 
     def regenerate(self) -> None:
-        """Generate a new maze, reload it and reset the view, or record failure."""
+        """Generate a new maze, reload it, and reset the view or status."""
         try:
             create_maze()
             self.load()
@@ -85,7 +85,7 @@ class MazeApp:
 
 
 def setup_colours(app: MazeApp) -> None:
-    """Initialize curses colour pairs, using app's current wall colour choice."""
+    """Initialize curses colour pairs using app's current wall colour."""
     curses.start_color()
     curses.use_default_colors()
     _, wall_colour = WALL_COLOURS[app.wall_colour_idx]

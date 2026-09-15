@@ -60,7 +60,7 @@ def parse_output_file(path: str) -> Maze:
     )
 
     def parse_coord(s: str, label: str) -> tuple[int, int]:
-        """Parse an "x,y" string into a coordinate, checking it is in bounds."""
+        """Parse an "x,y" string into a coordinate, checked to be in bounds."""
         x_str, y_str = s.split(",")
         x, y = int(x_str), int(y_str)
         if not (0 <= x < width and 0 <= y < height):
