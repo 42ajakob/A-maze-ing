@@ -1,11 +1,14 @@
 from utils import parser, maze_gen, out_file_creator, tui
+from mazegen import MazeGenerator
 
 
 def main() -> int:
     """DocStrings"""
     parsed_data = parser()
     try:
-        maze = maze_gen(parsed_data)
+        validator()
+        parsed_data = parser()
+        maze = MazeGenerator(parsed_data)
         out_file = out_file_creator(maze)
         tui(out_file)
     except Exception as e:
