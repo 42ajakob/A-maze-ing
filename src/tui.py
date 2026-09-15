@@ -1,8 +1,8 @@
 import curses
 from typing import Any, List
 
-from a_maze_ing import create_maze
-from src import MazeConfig
+from .maze_builder import create_maze
+from .parser import MazeConfig
 from .maze_io import Maze, parse_output_file
 from .render import (
     TAG_WALL, TAG_OPEN, TAG_PATH, TAG_ENTRY, TAG_EXIT,
