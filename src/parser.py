@@ -54,7 +54,17 @@ def parse_config() -> dict[ConfigKey, str]:
     """
     found_keys = {}
 
-    with open(argv[1]) as file:
+    if len(argv) < 2:
+        print("Error: missing config file argument")
+        exit(2)
+
+    try:
+        config_file = open(argv[1])
+    except OSError as e:
+        print(f"Error: cannot open config file {argv[1]!r}: {e}")
+        exit(1)
+
+    with config_file as file:
         for lineno, raw_line in enumerate(file.read().splitlines(), start=1):
             line = raw_line.strip()
 

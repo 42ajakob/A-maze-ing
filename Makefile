@@ -29,15 +29,14 @@ debug: install
 	@$(VENV_PYTHON) -m pdb a_maze_ing.py config.txt
 
 clean:
+	rm -rf .venv
 	rm -rf __pycache__/
-	rm -rf utils/__pycache__/
-	rm -rf mazegen/__pycache__/
-	rm -rf tests/__pycache__/
+	rm -rf src/__pycache__/
+	rm -rf src/mazegen/__pycache__/
 	rm -rf .mypy_cache/
-	rm -rf .pytest_cache/
 	rm -rf dist/
-	rm -rf build/
 	rm -rf *.egg-info/
+	rm -rf maze.txt
 
 lint: install
 	@$(VENV_PYTHON) -m flake8 --exclude=$(VENV_DIR) .

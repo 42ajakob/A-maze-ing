@@ -7,6 +7,47 @@ S = 0b0100
 W = 0b1000
 
 
+def get_42_pattern(width: int, height: int) -> set[tuple[int, int]]:
+    """Return the centered maze-cell coordinates for the 42 pattern."""
+    pattern = {
+        (0, 0),
+        (2, 0),
+        (0, 1),
+        (2, 1),
+        (0, 2),
+        (1, 2),
+        (2, 2),
+        (2, 3),
+        (2, 4),
+
+        (4, 0),
+        (5, 0),
+        (6, 0),
+        (6, 1),
+        (4, 2),
+        (5, 2),
+        (6, 2),
+        (4, 3),
+        (4, 4),
+        (5, 4),
+        (6, 4),
+    }
+
+    if width < 7 or height < 5:
+        return set()
+
+    pattern_width = 7
+    pattern_height = 5
+
+    offset_x = (width - pattern_width) // 2
+    offset_y = (height - pattern_height) // 2
+
+    return {
+        (x + offset_x, y + offset_y)
+        for x, y in pattern
+    }
+
+
 class Cell:
     """Represent a single cell in the maze."""
 
@@ -30,8 +71,14 @@ class MazeGenerator:
         """Initialize the maze generator."""
         self.width: int = width
         self.height: int = height
-        self.entry: tuple[int, int] = entry
-        self.exit: tuple[int, int] = exit
+        # entry/exit of (width, height) refer to the far border cell, same
+        # as (width - 1, height - 1); the maze stays fully walled either way.
+        self.entry: tuple[int, int] = (
+            min(entry[0], width - 1), min(entry[1], height - 1)
+        )
+        self.exit: tuple[int, int] = (
+            min(exit[0], width - 1), min(exit[1], height - 1)
+        )
         self.perfect: bool = perfect
         self.seed: int | None = seed
         self.random = random.Random(seed)
@@ -43,41 +90,7 @@ class MazeGenerator:
 
     def get_42_pattern(self) -> set[tuple[int, int]]:
         """Return the centered cells used to draw the 42 pattern."""
-        pattern = {
-            (1, 0),
-            (1, 1),
-            (0, 1),
-            (1, 2),
-            (2, 2),
-            (1, 3),
-            (1, 4),
-
-            (4, 0),
-            (5, 0),
-            (6, 0),
-            (6, 1),
-            (4, 2),
-            (5, 2),
-            (6, 2),
-            (6, 3),
-            (4, 4),
-            (5, 4),
-            (6, 4),
-        }
-
-        if self.width < 7 or self.height < 5:
-            return set()
-
-        pattern_width = 7
-        pattern_height = 5
-
-        offset_x = (self.width - pattern_width) // 2
-        offset_y = (self.height - pattern_height) // 2
-
-        return {
-            (x + offset_x, y + offset_y)
-            for x, y in pattern
-        }
+        return get_42_pattern(self.width, self.height)
 
     def is_42_cell(self, position: tuple[int, int]) -> bool:
         """Return if a cell belongs to the 42 pattern."""
