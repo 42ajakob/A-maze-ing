@@ -16,6 +16,9 @@ $(VENV_DIR)/bin/activate: requirements.txt
 
 install: $(VENV_DIR)/bin/activate
 
+build: install
+	@$(VENV_PYTHON) -m build
+
 test: install
 	@$(VENV_PYTHON) -m pytest
 
@@ -44,4 +47,4 @@ lint-strict: install
 	@$(VENV_PYTHON) -m flake8 --exclude=$(VENV_DIR) .
 	@$(VENV_PYTHON) -m mypy --strict --exclude $(VENV_DIR) .
 
-.PHONY: all test install run debug clean lint lint-strict
+.PHONY: all install build test run debug clean lint lint-strict
