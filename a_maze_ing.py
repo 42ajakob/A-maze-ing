@@ -12,7 +12,10 @@ def main() -> int:
         print(f"Error: {e}")
         return 1
 
-    tui(config.output_file, config)
+    try:
+        tui(config.output_file, config)
+    except KeyboardInterrupt:
+        pass
     return 0
 
 
