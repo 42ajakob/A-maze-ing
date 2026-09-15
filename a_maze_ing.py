@@ -1,21 +1,18 @@
-from utils import parser, maze_gen, out_file_creator, tui
-from mazegen import MazeGenerator
+from src import parser, MazeGenerator, write_maze, tui
 
 
 def main() -> int:
     """DocStrings"""
-    parsed_data = parser()
+    config = parser()
     try:
-        validator()
-        parsed_data = parser()
-        maze = MazeGenerator(parsed_data)
-        out_file = out_file_creator(maze)
-        tui(out_file)
+        maze = MazeGenerator(config)
+        output_file = write_maze(maze)
+        tui(output_file)
     except Exception as e:
         print(f"Error: {e}")
-        return 2
+        exit(1)
     return 0
 
 
 if __name__ == "__main__":
-    exit(main())
+    main()

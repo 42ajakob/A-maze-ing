@@ -1,4 +1,4 @@
-from mazegen import MazeGenerator
+from .mazegen import MazeGenerator
 
 
 def write_maze(
