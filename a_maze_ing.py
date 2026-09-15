@@ -1,11 +1,10 @@
-from utils import validator, parser, maze_gen, out_file_creator, tui
+from utils import parser, maze_gen, out_file_creator, tui
 
 
 def main() -> int:
     """DocStrings"""
+    parsed_data = parser()
     try:
-        validator()
-        parsed_data = parser()
         maze = maze_gen(parsed_data)
         out_file = out_file_creator(maze)
         tui(out_file)

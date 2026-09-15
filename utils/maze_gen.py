@@ -1,8 +1,11 @@
+from .parser import MazeConfig
+
+
 class MazeGenerator:
     """DocStrings"""
 
 
-def maze_gen(ParsedData: int) -> int:
+def maze_gen(ParsedData: MazeConfig) -> int:
     """DocStrings"""
     gen = MazeGenerator()
     if gen:
