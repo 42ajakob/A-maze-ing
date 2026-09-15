@@ -95,6 +95,7 @@ def apply_entry_exit_and_path(
     maze: Maze,
     show_path: bool,
 ) -> None:
+    """Mark entry, exit and, if enabled, the solution path on the char grid."""
     if show_path:
         for r, c in path_char_positions(maze):
             if tags[r][c] == TAG_OPEN:
@@ -116,6 +117,7 @@ def apply_42_pattern(
     maze: Maze,
     show_42: bool,
 ) -> None:
+    """Mark the 42 pattern cells on the char grid, if enabled."""
     if not show_42:
         return
 

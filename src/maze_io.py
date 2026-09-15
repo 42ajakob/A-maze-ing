@@ -7,6 +7,7 @@ _STEP_DELTA = {"N": (0, -1), "S": (0, 1), "E": (1, 0), "W": (-1, 0)}
 
 @dataclass
 class Maze:
+    """Parsed representation of a maze output file."""
     grid: list[list[int]]      # grid[y][x] -> 4-bit wall mask (bit=closed)
     width: int
     height: int
@@ -16,6 +17,7 @@ class Maze:
 
 
 def parse_output_file(path: str) -> Maze:
+    """Read and validate a maze output file, returning it as a Maze."""
     with open(path) as f:
         lines = f.read().splitlines()
 
@@ -58,6 +60,7 @@ def parse_output_file(path: str) -> Maze:
     )
 
     def parse_coord(s: str, label: str) -> tuple[int, int]:
+        """Parse an "x,y" string into a coordinate, checking it is in bounds."""
         x_str, y_str = s.split(",")
         x, y = int(x_str), int(y_str)
         if not (0 <= x < width and 0 <= y < height):
