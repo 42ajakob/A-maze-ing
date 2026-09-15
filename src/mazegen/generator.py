@@ -152,7 +152,6 @@ class MazeGenerator:
         for neighbour in self.get_neighbours(position):
             nx, ny = neighbour
 
-            # In which direction lays the neighbour?
             if nx == x + 1:
                 direction = E
             elif nx == x - 1:
@@ -162,7 +161,6 @@ class MazeGenerator:
             else:
                 direction = N
 
-            # Check if the wall is open
             if not (cell.walls & direction):
                 open_neighbours.append(neighbour)
 
@@ -258,17 +256,14 @@ class MazeGenerator:
         stack.append(current)
 
         while stack:
-            # DFS - using stack, last cell in, first cell out
             current = stack[-1]
 
-            # Find the unvisited neighbours
             neighbours = self.get_neighbours(current)
             unvisited = [
                 neighbour
                 for neighbour in neighbours
                 if neighbour not in visited and self.is_maze_cell(neighbour)
             ]
-            # Pick one randomly and remove the wall
             if unvisited:
                 next_cell = self.random.choice(unvisited)
                 self.remove_wall(current, next_cell)
@@ -276,7 +271,6 @@ class MazeGenerator:
                 stack.append(next_cell)
 
             else:
-                # no unvisited neighbour - backtracking by popping stack
                 stack.pop()
 
         if not self.perfect:
@@ -309,7 +303,6 @@ class MazeGenerator:
             for x in range(self.width):
                 cell = self.maze[y][x]
 
-                # cell to the East:
                 if (
                     x < self.width - 1
                     and self.is_maze_cell((x, y))
@@ -318,7 +311,6 @@ class MazeGenerator:
                 ):
                     closed_walls.append(((x, y), (x + 1, y)))
 
-                # cell to the South:
                 if (
                     y < self.height - 1
                     and self.is_maze_cell((x, y))
@@ -351,7 +343,6 @@ class MazeGenerator:
             if self.validate_corridor_width():
                 added += 1
             else:
-                # if wall created a 3x3 open area, re-close it
                 self.restore_wall(wall[0], wall[1])
 
     def validate_connectivity(self) -> bool:
@@ -449,11 +440,6 @@ class MazeGenerator:
 
         return True
 
-    # validate_connectivity() - Can I reach every cell?
-    # validate_walls() - Do neighboring cells agree?
-    # validate_borders() - Is the maze contained within its boundaries?
-    # NOW PERFECT OPTION, FOUND OUT BY COUNTING, CELLS-1
-
     def count_open_connections(self) -> int:
         """Count the connections between maze cells."""
         connections = 0
@@ -499,20 +485,17 @@ class MazeGenerator:
         previous[self.entry] = None
 
         while queue:
-            # BFS: process cells in the order they were discovered
             current = queue.popleft()
 
             if current == self.exit:
                 break
 
             for neighbour in self.get_open_neighbours(current):
-                # avoids walking around the same cells over and over again:
                 if (
                     self.is_maze_cell(neighbour)
                     and neighbour not in visited
                 ):
                     visited.add(neighbour)
-                    # records how I got to this spot:
                     previous[neighbour] = current
                     queue.append(neighbour)
 

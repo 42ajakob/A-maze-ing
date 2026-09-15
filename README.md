@@ -223,11 +223,6 @@ A status bar at the bottom of the screen shows the current state of the path and
 
 ## Code Reusability
 
-You must provide a short documentation describing how to:
-• Instantiate and use your generator, with at least a basic example.
-• Pass custom parameters (e.g., size, seed).
-• Access the generated structure, and access at least a solution.
-
 The maze-generation logic was implemented as a reusable Python package called `mazegen`.
 
 The main reusable class is `MazeGenerator`, which can be imported independently of the main application:
