@@ -104,7 +104,7 @@ def parser() -> "MazeConfig":
     try:
         maze_config = build_class(found_keys)
     except ValueError as e:
-        msg = str(e).split(" [type=")[0].removeprefix("Value error, ")
+        msg = str(e).split(" [type=")[0]
         print(f"Error: {msg}")
         exit(6)
     return maze_config
