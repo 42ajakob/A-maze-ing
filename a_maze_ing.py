@@ -1,8 +1,9 @@
 from src import parser, MazeGenerator, write_maze, tui
 
-
-def main() -> int:
-    """DocStrings"""
+def create_maze() -> "MazeConfig":
+    """parses config, generates a maze,
+    creates output file, returns config
+    """
     config = parser()
     try:
         maze = MazeGenerator(
@@ -17,10 +18,16 @@ def main() -> int:
         write_maze(
             config.output_file, maze
         )
-        tui(config.output_file)
     except Exception as e:
         print(f"Error: {e}")
         exit(1)
+    return config
+
+def main() -> int:
+    """creates a maze and starts tui"""
+    config = create_maze()
+    tui(config.output_file, config)
+
     return 0
 
 
