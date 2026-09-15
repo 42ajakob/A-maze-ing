@@ -1,6 +1,6 @@
-from sys import argv
+from sys import argv, exit
 from enum import Enum
-from typing import Tuple
+from typing import Any
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
@@ -48,10 +48,11 @@ class MazeConfig(BaseModel):
         return self
 
 
-def parse_config() -> dict:
-    """Searches for all key value pairs and makes sure the config file is valid"""
+def parse_config() -> dict[ConfigKey, str]:
+    """Searches for all key, value pairs
+    and makes sure the config file is valid
+    """
     found_keys = {}
-    errors = []
 
     with open(argv[1]) as file:
         for lineno, raw_line in enumerate(file.read().splitlines(), start=1):
@@ -85,7 +86,7 @@ def parse_config() -> dict:
 
 def build_class(found_keys: dict[ConfigKey, str]) -> MazeConfig:
     """Builds MazeConfig class"""
-    kwargs = {}
+    kwargs: dict[str, Any] = {}
     for key, value in found_keys.items():
         if key is ConfigKey.ENTRY:
             kwargs["maze_entry"] = tuple(int(v) for v in value.split(","))
@@ -94,14 +95,16 @@ def build_class(found_keys: dict[ConfigKey, str]) -> MazeConfig:
         else:
             kwargs[key.name.lower()] = value
 
-    return MazeConfig(**kwargs)
+    return MazeConfig.model_validate(kwargs)
+
 
 def parser() -> "MazeConfig":
     """Find Keys, build MazeConfig and return it"""
     found_keys = parse_config()
     try:
-        config = build_class(found_keys)
+        maze_config = build_class(found_keys)
     except ValueError as e:
         msg = str(e).split(" [type=")[0].removeprefix("Value error, ")
         print(f"Error: {msg}")
         exit(6)
+    return maze_config
