@@ -1,12 +1,11 @@
 import curses
-from typing import Any, List
-
+from typing import Any
 from .maze_builder import create_maze
 from .parser import MazeConfig
 from .maze_io import Maze, parse_output_file
 from .render import (
-    TAG_WALL, TAG_OPEN, TAG_PATH, TAG_ENTRY, TAG_EXIT,
-    apply_entry_exit_and_path, build_char_grid,
+    TAG_WALL, TAG_OPEN, TAG_PATH, TAG_ENTRY, TAG_EXIT, TAG_PATTERN,
+    apply_entry_exit_and_path, apply_42_pattern, build_char_grid,
 )
 
 WALL_COLOURS = [
@@ -25,6 +24,7 @@ PAIR_PATH = 3
 PAIR_ENTRY = 4
 PAIR_EXIT = 5
 PAIR_STATUS = 6
+PAIR_PATTERN = 7
 
 
 class MazeApp:
@@ -32,6 +32,7 @@ class MazeApp:
         self.path = path
         self.config = config
         self.show_path = True
+        self.show_42 = False
         self.wall_colour_idx = 0
         self.status = "Loaded maze."
         self.top = 0
@@ -41,8 +42,9 @@ class MazeApp:
     def load(self) -> None:
         self.maze: Maze = parse_output_file(self.path)
 
-    def build_view(self) -> tuple[List[str], List[List[str]]]:
+    def build_view(self) -> tuple[list[str], list[list[str]]]:
         chars, tags = build_char_grid(self.maze)
+        apply_42_pattern(chars, tags, self.maze, self.show_42)
         apply_entry_exit_and_path(chars, tags, self.maze, self.show_path)
         lines = ["".join(row) for row in chars]
         return lines, tags
@@ -66,6 +68,12 @@ class MazeApp:
         self.show_path = not self.show_path
         self.status = "Path shown." if self.show_path else "Path hidden."
 
+    def toggle_42(self) -> None:
+        self.show_42 = not self.show_42
+        self.status = (
+            "42 pattern shown." if self.show_42 else "42 pattern hidden."
+        )
+
 
 def setup_colours(app: MazeApp) -> None:
     curses.start_color()
@@ -77,6 +85,7 @@ def setup_colours(app: MazeApp) -> None:
     curses.init_pair(PAIR_ENTRY, curses.COLOR_GREEN, -1)
     curses.init_pair(PAIR_EXIT, curses.COLOR_RED, -1)
     curses.init_pair(PAIR_STATUS, curses.COLOR_BLACK, curses.COLOR_WHITE)
+    curses.init_pair(PAIR_PATTERN, curses.COLOR_CYAN, -1)
 
 
 TAG_PAIR = {
@@ -85,9 +94,10 @@ TAG_PAIR = {
     TAG_PATH: PAIR_PATH,
     TAG_ENTRY: PAIR_ENTRY,
     TAG_EXIT: PAIR_EXIT,
+    TAG_PATTERN: PAIR_PATTERN,
 }
 
-ATTR_BOLD_TAGS = {TAG_ENTRY, TAG_EXIT}
+ATTR_BOLD_TAGS = {TAG_ENTRY, TAG_EXIT, TAG_PATTERN}
 
 
 def draw(stdscr: "curses.window", app: MazeApp) -> None:
@@ -122,6 +132,7 @@ def draw(stdscr: "curses.window", app: MazeApp) -> None:
 
     status = (
         f" [p] path:{'on' if app.show_path else 'off'}  "
+        f"[4] 42 pattern:{'on' if app.show_42 else 'off'}  "
         f"[c] wall colour  "
         f"[r] regen  [arrows] scroll  [q] quit  |  {app.status}"
     )
@@ -148,6 +159,8 @@ def _curses_main(stdscr: "curses.window", app: MazeApp) -> None:
             break
         elif key == ord("p"):
             app.toggle_path()
+        elif key == ord("4"):
+            app.toggle_42()
         elif key == ord("c"):
             app.cycle_wall_colour()
             setup_colours(app)
