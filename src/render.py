@@ -1,17 +1,19 @@
-from typing import List, Set, Tuple
 from .maze_io import Maze, N, E, S, W
+from .mazegen.generator import get_42_pattern
 
-WALL_CH = "#"
+WALL_CH = "*"
 OPEN_CH = " "
 PATH_CH = "."
 ENTRY_CH = "S"
 EXIT_CH = "X"
+PATTERN_CH = "#"
 
 TAG_WALL = "wall"
 TAG_OPEN = "open"
 TAG_PATH = "path"
 TAG_ENTRY = "entry"
 TAG_EXIT = "exit"
+TAG_PATTERN = "pattern"
 
 DELTA = {
     "N": (0, -1),
@@ -21,12 +23,12 @@ DELTA = {
 }
 
 
-def cell_center(x: int, y: int) -> Tuple[int, int]:
+def cell_center(x: int, y: int) -> tuple[int, int]:
     """Row, col of the centre of cell (x, y) in the character grid."""
     return 2 * y + 1, 2 * x + 1
 
 
-def build_char_grid(maze: Maze) -> Tuple[List[List[str]], List[List[str]]]:
+def build_char_grid(maze: Maze) -> tuple[list[list[str]], list[list[str]]]:
     """
     Returns (chars, tags): two grids of identical shape
     (2*height+1 rows x 2*width+1 cols).
@@ -59,8 +61,8 @@ def build_char_grid(maze: Maze) -> Tuple[List[List[str]], List[List[str]]]:
     return chars, tags
 
 
-def path_cells(maze: Maze) -> List[Tuple[int, int]]:
-    """List of (x, y) cell coordinates visited along the solution path,
+def path_cells(maze: Maze) -> list[tuple[int, int]]:
+    """list of (x, y) cell coordinates visited along the solution path,
     in order, including entry and exit."""
     x, y = maze.entry
     cells = [(x, y)]
@@ -71,11 +73,11 @@ def path_cells(maze: Maze) -> List[Tuple[int, int]]:
     return cells
 
 
-def path_char_positions(maze: Maze) -> Set[Tuple[int, int]]:
+def path_char_positions(maze: Maze) -> set[tuple[int, int]]:
     """Character-grid (row, col) positions to highlight for the path,
     including the corridor cell between each pair of maze cells."""
     cells = path_cells(maze)
-    positions: Set[Tuple[int, int]] = set()
+    positions: set[tuple[int, int]] = set()
     prev = cell_center(*cells[0])
     positions.add(prev)
     for x, y in cells[1:]:
@@ -88,8 +90,8 @@ def path_char_positions(maze: Maze) -> Set[Tuple[int, int]]:
 
 
 def apply_entry_exit_and_path(
-    chars: List[List[str]],
-    tags: List[List[str]],
+    chars: list[list[str]],
+    tags: list[list[str]],
     maze: Maze,
     show_path: bool,
 ) -> None:
@@ -106,3 +108,19 @@ def apply_entry_exit_and_path(
     xr, xc = cell_center(*maze.exit)
     chars[xr][xc] = EXIT_CH
     tags[xr][xc] = TAG_EXIT
+
+
+def apply_42_pattern(
+    chars: list[list[str]],
+    tags: list[list[str]],
+    maze: Maze,
+    show_42: bool,
+) -> None:
+    if not show_42:
+        return
+
+    for x, y in get_42_pattern(maze.width, maze.height):
+        r, c = cell_center(x, y)
+        if tags[r][c] == TAG_OPEN:
+            chars[r][c] = PATTERN_CH
+            tags[r][c] = TAG_PATTERN
