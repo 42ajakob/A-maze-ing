@@ -19,9 +19,6 @@ install: $(VENV_DIR)/bin/activate
 build: install
 	@$(VENV_PYTHON) -m build
 
-test: install
-	@$(VENV_PYTHON) -m pytest
-
 run: install
 	@$(VENV_PYTHON) a_maze_ing.py config.txt
 
@@ -47,4 +44,4 @@ lint-strict: install
 	@$(VENV_PYTHON) -m flake8 --exclude=$(VENV_DIR) .
 	@$(VENV_PYTHON) -m mypy --strict --exclude $(VENV_DIR) .
 
-.PHONY: all install build test run debug clean lint lint-strict
+.PHONY: all install build run debug clean lint lint-strict
