@@ -40,7 +40,7 @@ class MazeConfig(BaseModel):
             ("maze_entry", self.maze_entry),
             ("maze_exit", self.maze_exit),
         ):
-            if not (0 <= x <= self.width and 0 <= y <= self.height):
+            if not (0 <= x < self.width and 0 <= y < self.height):
                 raise ValueError(
                     f"{name} {(x, y)} is out of bounds for "
                     f"width={self.width}, height={self.height}"
