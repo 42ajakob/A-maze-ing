@@ -75,6 +75,39 @@ make lint
 
 ## Configuration file
 
+The maze parameters are provided in a plain text configuration file, whose path is passed as the program's only argument.
+
+Example (`config.txt`):
+
+```
+# This is a comment
+SEED=42
+
+WIDTH=20
+HEIGHT=15
+ENTRY=0,0
+EXIT=19,14
+
+OUTPUT_FILE=maze.txt
+PERFECT=True
+```
+
+Each non-empty, non-comment line follows a `KEY=VALUE` format. Blank lines are ignored and lines starting with `#` are treated as comments.
+
+| Key | Description |
+|---|---|
+| `SEED` | Random seed used for generation, allowing the same maze to be reproduced |
+| `WIDTH` | Maze width, in cells |
+| `HEIGHT` | Maze height, in cells |
+| `ENTRY` | Entry coordinates, as `x,y` |
+| `EXIT` | Exit coordinates, as `x,y` |
+| `OUTPUT_FILE` | Path of the file the generated maze is written to |
+| `PERFECT` | `True` for a perfect maze, `False` for an imperfect maze with loops |
+
+All seven keys are required. The parser exits with an error message if a key is missing or unknown, a line cannot be split into a key and a value, or a value fails validation (for example a negative coordinate, or an entry/exit position outside the maze bounds).
+
+The file is parsed and validated in `src/parser.py`, using `pydantic` to build a `MazeConfig` object that is then passed to the maze generator.
+
 
 ## Maze Generation Algorithm
 
@@ -158,6 +191,34 @@ The solution is returned as a list of `(x, y)` coordinates and can also be conve
 
 
 ## Visual Representation
+
+Once the maze has been generated and written to the output file, it is loaded and displayed in an interactive terminal user interface (TUI) built with the `curses` library.
+
+The output file is parsed back into a `Maze` object, which is then converted into a two-dimensional character grid: each maze cell is drawn as a single character surrounded by its walls, so a maze of width W and height H produces a grid of `2*H+1` rows by `2*W+1` columns.
+
+| Character | Meaning |
+|---|---|
+| `*` | closed wall |
+| ` ` (space) | open passage |
+| `.` | solution path |
+| `S` | entry |
+| `X` | exit |
+| `#` | `42` pattern cell |
+
+Each character is styled with its own colour, using bold text for the entry, exit, and `42` pattern cells so they stand out from the rest of the maze.
+
+The TUI supports the following controls:
+
+| Key | Action |
+|---|---|
+| Arrow keys | Scroll the view |
+| `p` | Show or hide the solution path |
+| `4` | Show or hide the `42` pattern |
+| `c` | Cycle through the available wall colours |
+| `r` | Regenerate the maze using the same configuration file |
+| `q` / `Esc` | Quit |
+
+A status bar at the bottom of the screen shows the current state of the path and `42` pattern toggles, along with the result of the last action performed.
 
 
 ## Code Reusability
@@ -286,17 +347,3 @@ AI assistance was used during development for:
 * improving and checking the Readme file
 
 The final implementation was tested and reviewed by the team.
-
-
-
-• The complete structure and format of your config file.
-• The maze generation algorithm you chose.
-• Why you chose this algorithm.
-• What part of your code is reusable, and how.
-• Your team and project management with:
-◦ The roles of each team member.
-
-A-Maze-ing This is the way
-◦ Your anticipated planning and how it evolved until the end
-◦ What worked well and what could be improved
-◦ Have you used any specific tools? Which ones?
