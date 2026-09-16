@@ -32,15 +32,13 @@ def cell_center(x: int, y: int) -> tuple[int, int]:
     return 2 * y + 1, 2 * x + 1
 
 
-def build_char_grid(maze: Maze) -> tuple[list[list[str]], list[list[str]]]:
+def build_char_grid(config: MazeConfig, maze: Maze) -> tuple[list[list[str]], list[list[str]]]:
     """
     Returns (chars, tags): two grids of identical shape
     (2*height+1 rows x 2*width+1 cols)
     """
-    height = len(maze.grid)
-    width = len(maze.grid[0])
-    rows = 2 * height + 1
-    cols = 2 * width + 1
+    rows = 2 * config.height + 1
+    cols = 2 * config.width + 1
     chars = [[WALL_CH for _ in range(cols)] for _ in range(rows)]
     tags = [[TAG_WALL for _ in range(cols)] for _ in range(rows)]
 

@@ -46,7 +46,7 @@ class MazeApp:
 
     def build_view(self) -> tuple[list[str], list[list[str]]]:
         """Render the current maze into display lines and their style tags"""
-        chars, tags = build_char_grid(self.maze)
+        chars, tags = build_char_grid(self.config, self.maze)
         apply_42_pattern(chars, tags, self.config, self.show_42)
         apply_entry_exit_and_path(
             chars, tags, self.config, self.maze, self.show_path
