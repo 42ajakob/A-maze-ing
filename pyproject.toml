@@ -9,4 +9,4 @@ description = "Reusable maze generator"
 requires-python = ">=3.10"
 
 [tool.setuptools.packages.find]
-include = ["mazegen*"]
+include = ["src.mazegen*"]
