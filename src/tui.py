@@ -1,8 +1,7 @@
 import curses
-from typing import Any
 from .maze_builder import create_maze
 from .parser import MazeConfig
-from .maze_io import Maze, parse_output_file
+from .maze_io import parse_output_file
 from .render import (
     TAG_WALL, TAG_OPEN, TAG_PATH, TAG_ENTRY, TAG_EXIT, TAG_PATTERN,
     apply_entry_exit_and_path, apply_42_pattern, build_char_grid,
@@ -28,11 +27,10 @@ PAIR_PATTERN = 7
 
 
 class MazeApp:
-    """Holds the loaded maze, view state and display toggles for the TUI."""
+    """Holds the loaded maze, view state and display toggles for the TUI"""
 
-    def __init__(self, path: str, config: Any):
-        """Store the output file path and config, and load the maze."""
-        self.path = path
+    def __init__(self, config: MazeConfig):
+        """Store the config, and load the maze"""
         self.config = config
         self.show_path = True
         self.show_42 = False
@@ -43,21 +41,23 @@ class MazeApp:
         self.load()
 
     def load(self) -> None:
-        """Parse the output file at self.path into self.maze."""
-        self.maze: Maze = parse_output_file(self.path)
+        """Parse the output file at self.path into self.maze"""
+        self.maze = parse_output_file(self.config)
 
     def build_view(self) -> tuple[list[str], list[list[str]]]:
-        """Render the current maze into display lines and their style tags."""
+        """Render the current maze into display lines and their style tags"""
         chars, tags = build_char_grid(self.maze)
-        apply_42_pattern(chars, tags, self.maze, self.show_42)
-        apply_entry_exit_and_path(chars, tags, self.maze, self.show_path)
+        apply_42_pattern(chars, tags, self.config, self.show_42)
+        apply_entry_exit_and_path(
+            chars, tags, self.config, self.maze, self.show_path
+        )
         lines = ["".join(row) for row in chars]
         return lines, tags
 
     def regenerate(self) -> None:
-        """Generate a new maze, reload it, and reset the view or status."""
+        """Generate a new maze, reload it, and reset the view or status"""
         try:
-            create_maze()
+            self.config = create_maze()
             self.load()
             self.top = 0
             self.left = 0
@@ -66,18 +66,18 @@ class MazeApp:
             self.status = f"Regeneration failed: {exc}"
 
     def cycle_wall_colour(self) -> None:
-        """Switch to the next wall colour in WALL_COLOURS."""
+        """Switch to the next wall colour in WALL_COLOURS"""
         self.wall_colour_idx = (self.wall_colour_idx + 1) % len(WALL_COLOURS)
         name, _ = WALL_COLOURS[self.wall_colour_idx]
         self.status = f"Wall colour: {name}"
 
     def toggle_path(self) -> None:
-        """Toggle whether the solution path is drawn."""
+        """Toggle whether the solution path is drawn"""
         self.show_path = not self.show_path
         self.status = "Path shown." if self.show_path else "Path hidden."
 
     def toggle_42(self) -> None:
-        """Toggle whether the 42 pattern is drawn."""
+        """Toggle whether the 42 pattern is drawn"""
         self.show_42 = not self.show_42
         self.status = (
             "42 pattern shown." if self.show_42 else "42 pattern hidden."
@@ -85,7 +85,7 @@ class MazeApp:
 
 
 def setup_colours(app: MazeApp) -> None:
-    """Initialize curses colour pairs using app's current wall colour."""
+    """Initialize curses colour pairs using app's current wall colour"""
     curses.start_color()
     curses.use_default_colors()
     _, wall_colour = WALL_COLOURS[app.wall_colour_idx]
@@ -111,7 +111,7 @@ ATTR_BOLD_TAGS = {TAG_ENTRY, TAG_EXIT, TAG_PATTERN}
 
 
 def draw(stdscr: "curses.window", app: MazeApp) -> None:
-    """Render the visible slice of the maze and the status bar to stdscr."""
+    """Render the visible slice of the maze and the status bar to stdscr"""
     stdscr.erase()
     max_y, max_x = stdscr.getmaxyx()
     view_h = max_y - 2  # leave room for the status bar
@@ -158,7 +158,7 @@ def draw(stdscr: "curses.window", app: MazeApp) -> None:
 
 
 def _curses_main(stdscr: "curses.window", app: MazeApp) -> None:
-    """Run the curses event loop, dispatching keypresses to app actions."""
+    """Run the curses event loop, dispatching keypresses to app actions"""
     curses.curs_set(0)
     setup_colours(app)
     stdscr.keypad(True)
@@ -188,7 +188,7 @@ def _curses_main(stdscr: "curses.window", app: MazeApp) -> None:
             app.left += 1
 
 
-def tui(output_file: str, config: "MazeConfig") -> None:
-    """Load output_file and run the interactive maze viewer."""
-    app = MazeApp(output_file, config)
+def tui(config: MazeConfig) -> None:
+    """Load output_file and run the interactive maze viewer"""
+    app = MazeApp(config)
     curses.wrapper(lambda stdscr: _curses_main(stdscr, app))

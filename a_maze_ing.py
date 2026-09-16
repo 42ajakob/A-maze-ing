@@ -13,7 +13,7 @@ def main() -> int:
         return 1
 
     try:
-        tui(config.output_file, config)
+        tui(config)
     except KeyboardInterrupt:
         pass
     return 0

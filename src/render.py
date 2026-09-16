@@ -1,9 +1,13 @@
-from .maze_io import Maze, N, E, S, W
+from .maze_io import Maze
+from .parser import MazeConfig
 from .mazegen.pattern import get_42_pattern
 
-WALL_CH = "*"
+
+N, E, S, W = 0b0001, 0b0010, 0b0100, 0b1000
+
+WALL_CH = "+"
 OPEN_CH = " "
-PATH_CH = "."
+PATH_CH = "-"
 ENTRY_CH = "S"
 EXIT_CH = "X"
 PATTERN_CH = "#"
@@ -24,23 +28,24 @@ DELTA = {
 
 
 def cell_center(x: int, y: int) -> tuple[int, int]:
-    """Row, col of the centre of cell (x, y) in the character grid."""
+    """Row, col of the centre of cell (x, y) in the character grid"""
     return 2 * y + 1, 2 * x + 1
 
 
 def build_char_grid(maze: Maze) -> tuple[list[list[str]], list[list[str]]]:
     """
     Returns (chars, tags): two grids of identical shape
-    (2*height+1 rows x 2*width+1 cols).
+    (2*height+1 rows x 2*width+1 cols)
     """
-    rows = 2 * maze.height + 1
-    cols = 2 * maze.width + 1
+    height = len(maze.grid)
+    width = len(maze.grid[0])
+    rows = 2 * height + 1
+    cols = 2 * width + 1
     chars = [[WALL_CH for _ in range(cols)] for _ in range(rows)]
     tags = [[TAG_WALL for _ in range(cols)] for _ in range(rows)]
 
-    for y in range(maze.height):
-        for x in range(maze.width):
-            mask = maze.grid[y][x]
+    for y, grid_row in enumerate(maze.grid):
+        for x, mask in enumerate(grid_row):
             r, c = cell_center(x, y)
             chars[r][c] = OPEN_CH
             tags[r][c] = TAG_OPEN
@@ -61,10 +66,10 @@ def build_char_grid(maze: Maze) -> tuple[list[list[str]], list[list[str]]]:
     return chars, tags
 
 
-def path_cells(maze: Maze) -> list[tuple[int, int]]:
+def path_cells(config: MazeConfig, maze: Maze) -> list[tuple[int, int]]:
     """list of (x, y) cell coordinates visited along the solution path,
-    in order, including entry and exit."""
-    x, y = maze.entry
+    in order, including entry and exit"""
+    x, y = config.maze_entry
     cells = [(x, y)]
     for step in maze.path:
         dx, dy = DELTA[step]
@@ -73,10 +78,12 @@ def path_cells(maze: Maze) -> list[tuple[int, int]]:
     return cells
 
 
-def path_char_positions(maze: Maze) -> set[tuple[int, int]]:
+def path_char_positions(
+    config: MazeConfig, maze: Maze,
+) -> set[tuple[int, int]]:
     """Character-grid (row, col) positions to highlight for the path,
-    including the corridor cell between each pair of maze cells."""
-    cells = path_cells(maze)
+    including the corridor cell between each pair of maze cells"""
+    cells = path_cells(config, maze)
     positions: set[tuple[int, int]] = set()
     prev = cell_center(*cells[0])
     positions.add(prev)
@@ -92,21 +99,22 @@ def path_char_positions(maze: Maze) -> set[tuple[int, int]]:
 def apply_entry_exit_and_path(
     chars: list[list[str]],
     tags: list[list[str]],
+    config: MazeConfig,
     maze: Maze,
     show_path: bool,
 ) -> None:
-    """Mark entry, exit and, if enabled, the solution path on the char grid."""
+    """Mark entry, exit and, if enabled, the solution path on the char grid"""
     if show_path:
-        for r, c in path_char_positions(maze):
+        for r, c in path_char_positions(config, maze):
             if tags[r][c] == TAG_OPEN:
                 chars[r][c] = PATH_CH
                 tags[r][c] = TAG_PATH
 
-    er, ec = cell_center(*maze.entry)
+    er, ec = cell_center(*config.maze_entry)
     chars[er][ec] = ENTRY_CH
     tags[er][ec] = TAG_ENTRY
 
-    xr, xc = cell_center(*maze.exit)
+    xr, xc = cell_center(*config.maze_exit)
     chars[xr][xc] = EXIT_CH
     tags[xr][xc] = TAG_EXIT
 
@@ -114,14 +122,14 @@ def apply_entry_exit_and_path(
 def apply_42_pattern(
     chars: list[list[str]],
     tags: list[list[str]],
-    maze: Maze,
+    config: MazeConfig,
     show_42: bool,
 ) -> None:
-    """Mark the 42 pattern cells on the char grid, if enabled."""
+    """Mark the 42 pattern cells on the char grid, if enabled"""
     if not show_42:
         return
 
-    for x, y in get_42_pattern(maze.width, maze.height):
+    for x, y in get_42_pattern(config.width, config.height):
         r, c = cell_center(x, y)
         if tags[r][c] == TAG_OPEN:
             chars[r][c] = PATTERN_CH
