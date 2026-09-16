@@ -1,5 +1,5 @@
 from .maze_io import Maze, N, E, S, W
-from .mazegen.generator import get_42_pattern
+from .mazegen.pattern import get_42_pattern
 
 WALL_CH = "*"
 OPEN_CH = " "

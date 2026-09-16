@@ -1,51 +1,8 @@
 import random
 from collections import deque
 
-N = 0b0001
-E = 0b0010
-S = 0b0100
-W = 0b1000
-
-
-def get_42_pattern(width: int, height: int) -> set[tuple[int, int]]:
-    """Return the centered maze-cell coordinates for the 42 pattern."""
-    pattern = {
-        (0, 0),
-        (2, 0),
-        (0, 1),
-        (2, 1),
-        (0, 2),
-        (1, 2),
-        (2, 2),
-        (2, 3),
-        (2, 4),
-
-        (4, 0),
-        (5, 0),
-        (6, 0),
-        (6, 1),
-        (4, 2),
-        (5, 2),
-        (6, 2),
-        (4, 3),
-        (4, 4),
-        (5, 4),
-        (6, 4),
-    }
-
-    if width < 7 or height < 5:
-        return set()
-
-    pattern_width = 7
-    pattern_height = 5
-
-    offset_x = (width - pattern_width) // 2
-    offset_y = (height - pattern_height) // 2
-
-    return {
-        (x + offset_x, y + offset_y)
-        for x, y in pattern
-    }
+from .constants import N, E, S, W
+from .pattern import get_42_pattern
 
 
 class Cell:
@@ -82,6 +39,7 @@ class MazeGenerator:
             for _ in range(height)
         ]
 
+    # 42 pattern
     def get_42_pattern(self) -> set[tuple[int, int]]:
         """Return the centered cells used to draw the 42 pattern."""
         return get_42_pattern(self.width, self.height)
@@ -116,6 +74,7 @@ class MazeGenerator:
         """Check if the maze is large enough for the 42 pattern."""
         return self.width >= 7 and self.height >= 5
 
+    # Neighbours and wall manipulation
     def get_neighbours(
         self,
         position: tuple[int, int],
@@ -240,6 +199,7 @@ class MazeGenerator:
         else:
             raise ValueError("Cells are not neighbouring cells")
 
+    # Maze generation
     def generate(self) -> None:
         """Generate a random maze."""
 
@@ -345,32 +305,7 @@ class MazeGenerator:
             else:
                 self.restore_wall(wall[0], wall[1])
 
-    def validate_connectivity(self) -> bool:
-        """Check if every cell can be reached from the first cell."""
-        visited: set[tuple[int, int]] = set()
-        stack: list[tuple[int, int]] = [self.entry]
-
-        while stack:
-            current = stack.pop()
-
-            if current in visited:
-                continue
-
-            visited.add(current)
-
-            for neighbour in self.get_open_neighbours(current):
-                if neighbour not in visited and self.is_maze_cell(neighbour):
-                    stack.append(neighbour)
-
-        maze_cells = {
-            (x, y)
-            for y in range(self.height)
-            for x in range(self.width)
-            if self.is_maze_cell((x, y))
-        }
-
-        return visited == maze_cells
-
+    # Maze validation
     def validate_walls(self) -> bool:
         """Check if neighbouring cells have matching walls."""
         for y in range(self.height):
@@ -416,6 +351,32 @@ class MazeGenerator:
                 return False
 
         return True
+
+    def validate_connectivity(self) -> bool:
+        """Check if every cell can be reached from the first cell."""
+        visited: set[tuple[int, int]] = set()
+        stack: list[tuple[int, int]] = [self.entry]
+
+        while stack:
+            current = stack.pop()
+
+            if current in visited:
+                continue
+
+            visited.add(current)
+
+            for neighbour in self.get_open_neighbours(current):
+                if neighbour not in visited and self.is_maze_cell(neighbour):
+                    stack.append(neighbour)
+
+        maze_cells = {
+            (x, y)
+            for y in range(self.height)
+            for x in range(self.width)
+            if self.is_maze_cell((x, y))
+        }
+
+        return visited == maze_cells
 
     def is_open_3x3(self, x: int, y: int) -> bool:
         """Check whether a 3x3 area is completely open."""
@@ -474,6 +435,7 @@ class MazeGenerator:
             == self.count_maze_cells() - 1
         )
 
+    # Maze solving
     def solve(self) -> list[tuple[int, int]]:
         """Find the shortest path from entry to exit."""
         queue: deque[tuple[int, int]] = deque()
@@ -535,6 +497,7 @@ class MazeGenerator:
 
         return "".join(directions)
 
+    # Output
     def to_hex(self) -> list[str]:
         """Maze walls are converted to hexadecimal rows."""
         rows: list[str] = []
