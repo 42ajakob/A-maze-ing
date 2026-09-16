@@ -62,8 +62,8 @@ class MazeApp:
             self.top = 0
             self.left = 0
             self.status = "Maze regenerated."
-        except Exception as exc:  # noqa: BLE001
-            self.status = f"Regeneration failed: {exc}"
+        except Exception as e:  # noqa: BLE001
+            self.status = f"Regeneration failed: {e}"
 
     def cycle_wall_colour(self) -> None:
         """Switch to the next wall colour in WALL_COLOURS"""
@@ -139,7 +139,7 @@ def draw(stdscr: "curses.window", app: MazeApp) -> None:
             try:
                 stdscr.addstr(screen_r, screen_c, ch, attr)
             except curses.error:
-                pass  # bottom-right corner write, safe to ignore
+                pass
 
     status = (
         f" [p] path:{'on' if app.show_path else 'off'}  "
